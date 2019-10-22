@@ -2,6 +2,7 @@
 
 require 'sinatra'
 require 'redis'
+require 'timeout'
 
 redis = Redis.new(host: '127.0.0.1', port: 6379, db: 15)
 
@@ -11,7 +12,7 @@ end
 
 get '/create-deadlock' do
   redis.pipelined do
-    100_000.times do
+    1_000_000.times do
       redis.set('foo', 'bar')
     end
   end
@@ -19,6 +20,8 @@ get '/create-deadlock' do
 end
 
 get '/check-deadlock' do
-  redis.ping
+  Timeout::timeout(3) do
+    redis.ping
+  end
   'Completed check-deadlock execution!'
 end
